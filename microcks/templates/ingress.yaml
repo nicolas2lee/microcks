@@ -1,0 +1,51 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: microcks
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+  {{- with .Values.microcks.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+spec:
+  tls:
+  - hosts:
+    - "{{ .Values.microcks.url }}"
+    secretName: {{ .Values.microcks.ingressSecretRef | default (print .Values.appName "-microcks-ingress-secret") }}
+  rules:
+  - host: "{{ .Values.microcks.url }}"
+    http:
+      paths:
+      - backend:
+          serviceName: "{{ .Values.appName }}"
+          servicePort: 8080
+{{- if .Values.keycloak.install }}
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: keycloak
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+  {{- with .Values.keycloak.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+spec:
+  tls:
+  - hosts:
+    - "{{ .Values.keycloak.url }}"
+    secretName: {{ .Values.keycloak.ingressSecretRef | default (print .Values.appName "-keycloak-ingress-secret") }}
+  rules:
+  - host: "{{ .Values.keycloak.url }}"
+    http:
+      paths:
+      - backend:
+          serviceName: "{{ .Values.appName }}-keycloak"
+          servicePort: 8080
+{{- end }}
