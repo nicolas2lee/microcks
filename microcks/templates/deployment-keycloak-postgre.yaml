@@ -1,0 +1,177 @@
+{{- if and .Values.keycloak.install }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}-keycloak"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: keycloak
+    group: microcks
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: keycloak
+      container: keycloak
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: keycloak
+        container: keycloak
+        group: microcks
+    spec:
+      containers:
+      - name: keycloak-server
+        image: {{ .Values.keycloak.image }}
+        resources:
+          requests:
+            cpu: 400m
+            memory: 400Mi
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: jolokia
+          containerPort: 8778
+          protocol: TCP
+        args:
+        - "-b $(INTERNAL_POD_IP)"
+        - "-Djgroups.bind_addr=global"
+        - "-Djboss.node.name=$(INTERNAL_POD_IP)"
+        - "-Dkeycloak.import=/opt/jboss/keycloak/standalone/configuration/realm/microcks-realm.json"
+        env:
+        - name: INTERNAL_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KEYCLOAK_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: KEYCLOAK_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: OPERATING_MODE
+          value: clustered
+        - name: DB_VENDOR
+          value: POSTGRES
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: postgresUsername
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: postgresPassword
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: DB_DATABASE
+          value: root
+        - name: DB_ADDR
+          value: "{{ .Values.appName }}-keycloak-postgresql"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: 'true'
+        {{- if hasKey .Values.keycloak "privateUrl" }}
+        - name: KEYCLOAK_FRONTEND_URL
+          value: https://{{ .Values.keycloak.url }}/auth
+        {{- end }}
+        volumeMounts:
+        - name: {{ .Values.appName }}-keycloak-config
+          mountPath: "/opt/jboss/keycloak/standalone/configuration/realm"
+        securityContext:
+          privileged: false
+      volumes:
+      - name: "{{ .Values.appName }}-keycloak-config"
+        configMap:
+          name: "{{ .Values.appName }}-keycloak-config"
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}-keycloak-postgresql"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: keycloak-postgresql
+    group: microcks
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: keycloak-postgresql
+      container: keycloak-postgresql
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: keycloak-postgresql
+        container: keycloak-postgresql
+        group: microcks
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: keycloak-postgresql
+          image: {{ .Values.keycloak.postgresImage }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          readinessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 5
+            exec:
+              command:
+                - "/bin/sh"
+                - "-i"
+                - "-c"
+                - psql 127.0.0.1 -U ${POSTGRESQL_USER} -q -d ${POSTGRESQL_DATABASE}
+                  -c 'SELECT 1'
+          livenessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 5432
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  key: postgresUsername
+                  name: "{{ .Values.appName }}-keycloak-admin"
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresPassword
+                  name: "{{ .Values.appName }}-keycloak-admin"
+            - name: POSTGRESQL_DATABASE
+              value: root
+            - name: POSTGRESQL_MAX_CONNECTIONS
+              value: '100'
+            - name: POSTGRESQL_SHARED_BUFFERS
+              value: 12MB
+          volumeMounts:
+            - name: "{{ .Values.appName }}-keycloak-postgresql-data"
+              mountPath: "/var/lib/pgsql/data"
+      volumes:
+        - name: "{{ .Values.appName }}-keycloak-postgresql-data"
+          {{- if .Values.keycloak.persistent }}
+          persistentVolumeClaim:
+            claimName: "{{ .Values.appName }}-keycloak-postgresql"
+          {{- else }}
+          emptyDir:
+            medium: ''
+  {{- end }}
+{{- end }}

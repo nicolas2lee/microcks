@@ -33,7 +33,7 @@ keycloak:
   # Beware that in case of update, new value will be generated and
   #adminPassword: 123
 
-  persistent: true
+  persistent: false
   volumeSize: 1Gi
   postgresImage: centos/postgresql-95-centos7:latest
   username: userP
@@ -49,7 +49,7 @@ mongodb:
   #uri: mongodb:27017
   #database: sampledb
   image: centos/mongodb-34-centos7:latest
-  persistent: true
+  persistent: false
   volumeSize: 2Gi
   
   username: userM
