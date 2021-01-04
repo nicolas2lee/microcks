@@ -31,7 +31,7 @@ spec:
           protocol: TCP
         env:
           - name: JAVA_OPTIONS
-            value: "-Djavax.net.ssl.trustStore=/security/truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit"
+            value: "-Djavax.net.ssl.trustStore=/security/microcks/truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit"
           - name: SPRING_PROFILES_ACTIVE
             value: prod
           - name: SPRING_DATA_MONGODB_URI
@@ -115,7 +115,7 @@ spec:
           - name: "{{ .Values.appName }}-config"
             mountPath: "/deployments/config"
           - name: "{{ .Values.appName }}-certificates"
-            mountPath: "/security"
+            mountPath: "/security/microcks"
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-config"

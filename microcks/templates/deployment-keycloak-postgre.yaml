@@ -62,28 +62,28 @@ spec:
               name: "{{ .Values.appName }}-keycloak-admin"
         - name: OPERATING_MODE
           value: clustered
-{{/*        - name: DB_VENDOR*/}}
-{{/*          value: POSTGRES*/}}
-{{/*        - name: DB_USER*/}}
-{{/*          valueFrom:*/}}
-{{/*            secretKeyRef:*/}}
-{{/*              key: postgresUsername*/}}
-{{/*              name: "{{ .Values.appName }}-keycloak-admin"*/}}
-{{/*        - name: DB_PASSWORD*/}}
-{{/*          valueFrom:*/}}
-{{/*            secretKeyRef:*/}}
-{{/*              key: postgresPassword*/}}
-{{/*              name: "{{ .Values.appName }}-keycloak-admin"*/}}
-{{/*        - name: DB_DATABASE*/}}
-{{/*          valueFrom:*/}}
-{{/*            secretKeyRef:*/}}
-{{/*              key: postgresDatabase*/}}
-{{/*              name: "{{ .Values.appName }}-keycloak-admin"*/}}
-{{/*        - name: DB_ADDR*/}}
-{{/*          valueFrom:*/}}
-{{/*            secretKeyRef:*/}}
-{{/*              key: postgresUrl*/}}
-{{/*              name: "{{ .Values.appName }}-keycloak-admin"*/}}
+        - name: DB_VENDOR
+          value: POSTGRES
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: postgresUsername
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: postgresPassword
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: DB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: postgresDatabase
+              name: "{{ .Values.appName }}-keycloak-admin"
+        - name: DB_ADDR
+          valueFrom:
+            secretKeyRef:
+              key: postgresUrl
+              name: "{{ .Values.appName }}-keycloak-admin"
         - name: PROXY_ADDRESS_FORWARDING
           value: 'true'
         {{- if hasKey .Values.keycloak "privateUrl" }}
@@ -93,12 +93,17 @@ spec:
         volumeMounts:
         - name: {{ .Values.appName }}-keycloak-config
           mountPath: "/opt/jboss/keycloak/standalone/configuration/realm"
+        - name: {{ .Values.appName }}-keycloak-postgre-ca
+          mountPath: "/security/pgsql"
         securityContext:
           privileged: false
       volumes:
       - name: "{{ .Values.appName }}-keycloak-config"
         configMap:
           name: "{{ .Values.appName }}-keycloak-config"
+      - name: "{{ .Values.appName }}-keycloak-postgre-ca"
+        secret:
+          secretName: "{{ .Values.appName }}-keycloak-postgre-ca"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
 {{- end }}
