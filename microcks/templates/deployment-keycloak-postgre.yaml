@@ -62,22 +62,22 @@ spec:
               name: "{{ .Values.appName }}-keycloak-admin"
         - name: OPERATING_MODE
           value: clustered
-        - name: DB_VENDOR
-          value: POSTGRES
-        - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              key: postgresUsername
-              name: "{{ .Values.appName }}-keycloak-admin"
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: postgresPassword
-              name: "{{ .Values.appName }}-keycloak-admin"
-        - name: DB_DATABASE
-          value: root
-        - name: DB_ADDR
-          value: "{{ .Values.appName }}-keycloak-postgresql"
+{{/*        - name: DB_VENDOR*/}}
+{{/*          value: POSTGRES*/}}
+{{/*        - name: DB_USER*/}}
+{{/*          valueFrom:*/}}
+{{/*            secretKeyRef:*/}}
+{{/*              key: postgresUsername*/}}
+{{/*              name: "{{ .Values.appName }}-keycloak-admin"*/}}
+{{/*        - name: DB_PASSWORD*/}}
+{{/*          valueFrom:*/}}
+{{/*            secretKeyRef:*/}}
+{{/*              key: postgresPassword*/}}
+{{/*              name: "{{ .Values.appName }}-keycloak-admin"*/}}
+{{/*        - name: DB_DATABASE*/}}
+{{/*          value: root*/}}
+{{/*        - name: DB_ADDR*/}}
+{{/*          value: "{{ .Values.appName }}-keycloak-postgresql"*/}}
         - name: PROXY_ADDRESS_FORWARDING
           value: 'true'
         {{- if hasKey .Values.keycloak "privateUrl" }}

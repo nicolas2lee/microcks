@@ -19,8 +19,8 @@ postman:
 keycloak:
   install: true
   realm: microcks
-  url: keycloak-microcks.192.168.99.100.nip.io
-  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080/auth
+  url: 159.122.175.6:30081
+  privateUrl: http://159.122.175.6:30081/auth #for free kube cluster, use nodeport service instead of ingress, and public ip+port
   #ingressSecretRef: my-secret-for-keycloak-ingress
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
