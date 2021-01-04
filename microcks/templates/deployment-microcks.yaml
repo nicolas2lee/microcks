@@ -31,11 +31,11 @@ spec:
           protocol: TCP
         env:
           - name: JAVA_OPTIONS
-            value: ""
+            value: "-Djavax.net.ssl.trustStore=/security/truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit"
           - name: SPRING_PROFILES_ACTIVE
             value: prod
           - name: SPRING_DATA_MONGODB_URI
-            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.mongodb.uri | default (print .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}
+            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@${MONGODB_URI}/${SPRING_DATA_MONGODB_DATABASE}?authSource=admin&replicaSet=replset&ssl=true
           - name: SPRING_DATA_MONGODB_USER
             valueFrom:
               secretKeyRef:
@@ -54,6 +54,16 @@ spec:
                 name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
                 {{- else }}
                 key: password
+                name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
+          - name: MONGODB_URI
+            valueFrom:
+              secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.uri | default "mongodb:27017" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
+                key: uri
                 name: "{{ .Values.appName }}-mongodb-connection"
                 {{- end }}
           - name: SPRING_DATA_MONGODB_DATABASE
@@ -104,8 +114,13 @@ spec:
         volumeMounts:
           - name: "{{ .Values.appName }}-config"
             mountPath: "/deployments/config"
+          - name: "{{ .Values.appName }}-certificates"
+            mountPath: "/security"
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-config"
           configMap:
             name: "{{ .Values.appName }}-config"
+        - name: "{{ .Values.appName }}-certificates"
+          secret:
+            secretName: "{{ .Values.appName }}-certificates"
