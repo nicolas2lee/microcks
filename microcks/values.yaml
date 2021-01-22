@@ -1,7 +1,7 @@
 appName: microcks
 
 microcks:
-  url: microcks-microcks.192.168.99.100.nip.io
+  url: microcks.bddf-poc-d98973e609c42352a7740453c43f327c-0000.eu-de.containers.appdomain.cloud
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
   #ingressAnnotations:
@@ -21,7 +21,7 @@ keycloak:
   install: true
   realm: microcks
   url: keycloak-microcks.bddf-poc-d98973e609c42352a7740453c43f327c-0000.eu-de.containers.appdomain.cloud
-  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080/auth
+  privateUrl: https://microcks-keycloak.microcks.svc.cluster.local:8080/auth
   #ingressSecretRef: my-secret-for-keycloak-ingress
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
